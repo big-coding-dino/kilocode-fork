@@ -120,6 +120,7 @@ object ChatComponentBuilder {
         }
 
         val messageTimestamp = messageWithParts.info.time.created
+        val isUser = messageWithParts.info.isUser
 
         for (part in messageWithParts.parts) {
             // Skip step markers - they're internal API boundaries
@@ -128,7 +129,7 @@ object ChatComponentBuilder {
             val partView = createPartContent(
                 project, part, pendingRequests, messageTimestamp, sessionStartTime,
                 onPermissionReply, onQuestionReply, onQuestionReject,
-                toolPartWrappers, textPartCache
+                toolPartWrappers, textPartCache, isUser = isUser
             )
             partView.alignmentX = Component.LEFT_ALIGNMENT
             contentPanel.add(partView)
@@ -148,16 +149,22 @@ object ChatComponentBuilder {
         onQuestionReply: (requestId: String, answers: List<List<String>>) -> Unit,
         onQuestionReject: (requestId: String) -> Unit,
         toolPartWrappers: MutableList<ToolPartWrapper>,
-        textPartCache: MutableMap<String, MarkdownPanel>
+        textPartCache: MutableMap<String, MarkdownPanel>,
+        isUser: Boolean = false
     ): JComponent {
         val (entityType, content) = when (part.type) {
             "text" -> {
-                val markdownPanel = MarkdownPanel().apply {
-                    isOpaque = false
-                    setMarkdown(part.text ?: "")
+                val text = part.text
+                if (isUser && !text.isNullOrBlank()) {
+                    SessionEntityType.UserText(part.callID) to UserSelfPanel(text)
+                } else {
+                    val markdownPanel = MarkdownPanel().apply {
+                        isOpaque = false
+                        setMarkdown(text ?: "")
+                    }
+                    textPartCache[part.id] = markdownPanel
+                    SessionEntityType.Text(part.callID) to markdownPanel
                 }
-                textPartCache[part.id] = markdownPanel
-                SessionEntityType.Text(part.callID) to markdownPanel
             }
             "tool" -> {
                 val permission = pendingRequests.getPermissionForTool(part.callID)
