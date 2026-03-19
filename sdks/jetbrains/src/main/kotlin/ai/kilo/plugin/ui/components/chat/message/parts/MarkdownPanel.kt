@@ -1,7 +1,9 @@
 package ai.kilo.plugin.ui.components.chat.message.parts
 
+import ai.kilo.plugin.ui.KiloSpacing
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.util.ui.JBUI
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension
@@ -180,8 +182,9 @@ class MarkdownPanel(
             font = Font(Font.MONOSPACED, Font.PLAIN, 12)
             border = BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground()),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)
+                JBUI.Borders.empty(KiloSpacing.md)
             )
+            background = EditorColorsManager.getInstance().globalScheme.defaultBackground
             tabSize = 4
         }
         panel.add(textArea, BorderLayout.CENTER)
@@ -197,6 +200,7 @@ class MarkdownPanel(
         val textColor = JBUI.CurrentTheme.Label.foreground().toHex()
         val mutedColor = JBUI.CurrentTheme.Label.disabledForeground().toHex()
         val linkColor = JBUI.CurrentTheme.Link.Foreground.ENABLED.toHex()
+        val editorBg = EditorColorsManager.getInstance().globalScheme.defaultBackground.toHex()
 
         styleSheet.addRule("body { font-family: $fontFamily; font-size: 14pt; margin: 0; padding: 0; color: $textColor; }")
         styleSheet.addRule("p { margin: 4px 0; }")
@@ -206,10 +210,11 @@ class MarkdownPanel(
         styleSheet.addRule("ul, ol { margin: 4px 0 4px 20px; }")
         styleSheet.addRule("li { margin: 2px 0; }")
         styleSheet.addRule("a { color: $linkColor; }")
-        styleSheet.addRule("code { font-family: monospace; color: $textColor; }")
-        styleSheet.addRule("pre { font-family: monospace; color: $textColor; }")
-        styleSheet.addRule("blockquote { color: $mutedColor; }")
+        styleSheet.addRule("code { font-family: monospace; color: $textColor; background-color: $editorBg; padding: 8px; }")
+        styleSheet.addRule("pre { font-family: monospace; color: $textColor; background-color: $editorBg; padding: 8px; }")
+        styleSheet.addRule("blockquote { color: $mutedColor; background-color: $editorBg; padding: 8px; }")
         styleSheet.addRule("em { color: $textColor; }")
+
 
         kit.styleSheet = styleSheet
         return kit

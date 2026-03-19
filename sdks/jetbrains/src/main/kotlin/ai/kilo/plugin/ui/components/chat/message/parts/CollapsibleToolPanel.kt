@@ -1,16 +1,15 @@
 package ai.kilo.plugin.ui.components.chat.message.parts
 
 import ai.kilo.plugin.model.Part
-import ai.kilo.plugin.ui.KiloTheme
 import ai.kilo.plugin.ui.KiloSpacing
+import ai.kilo.plugin.ui.KiloTheme
 import ai.kilo.plugin.ui.KiloTypography
-import ai.kilo.plugin.ui.KiloRadius
 import com.intellij.icons.AllIcons
 import com.intellij.ide.CopyPasteManagerEx
+import com.intellij.openapi.editor.colors.CodeInsightColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.ui.AnimatedIcon
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import java.awt.*
@@ -41,7 +40,7 @@ class CollapsibleToolPanel(
     init {
         isOpaque = false
         border = JBUI.Borders.compound(
-            JBUI.Borders.customLine(KiloTheme.borderWeak),
+            JBUI.Borders.customLine(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground()),
             JBUI.Borders.empty(0)
         )
 
@@ -63,7 +62,7 @@ class CollapsibleToolPanel(
     private fun createHeader(): JPanel {
         val panel = JPanel(BorderLayout()).apply {
             isOpaque = true
-            background = KiloTheme.surfaceRaisedBase
+            background = JBUI.CurrentTheme.List.BACKGROUND
             border = JBUI.Borders.empty(KiloSpacing.sm, KiloSpacing.md)
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         }
@@ -115,10 +114,10 @@ class CollapsibleToolPanel(
                 toggleExpanded()
             }
             override fun mouseEntered(e: MouseEvent) {
-                panel.background = KiloTheme.surfaceRaisedStrong
+                panel.background = JBUI.CurrentTheme.ActionButton.hoverBackground()
             }
             override fun mouseExited(e: MouseEvent) {
-                panel.background = KiloTheme.surfaceRaisedBase
+                panel.background = JBUI.CurrentTheme.List.BACKGROUND
             }
         })
 
@@ -139,7 +138,7 @@ class CollapsibleToolPanel(
         val panel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             isOpaque = true
-            background = KiloTheme.backgroundStronger
+            background = JBUI.CurrentTheme.ToolWindow.background()
             border = JBUI.Borders.empty(KiloSpacing.md)
         }
 
@@ -223,17 +222,21 @@ class CollapsibleToolPanel(
         // Content area
         val scheme = EditorColorsManager.getInstance().globalScheme
         val editorFont = scheme.getFont(EditorFontType.PLAIN)
-
         // Code block colors from theme
-        val codeBg = KiloTheme.surfaceInsetBase
-        val codeText = if (isError) KiloTheme.textCritical else KiloTheme.textBase
-        
+        val codeBackgroundColor = scheme.defaultBackground
+        val codeText = if (isError)
+                // use the wrong reference (text error color when you have undefined variable, for example) color as a error color
+                scheme.getAttributes(CodeInsightColors.WRONG_REFERENCES_ATTRIBUTES)
+                ?.foregroundColor ?: JBUI.CurrentTheme.Label.foreground()
+        else
+            JBUI.CurrentTheme.Label.foreground()
+
         val textArea = JTextArea(content).apply {
             isEditable = false
             lineWrap = true
             wrapStyleWord = true
             isOpaque = true
-            background = codeBg
+            background = codeBackgroundColor
             foreground = codeText
             font = Font(editorFont.family, Font.PLAIN, KiloTypography.fontSizeXSmall.toInt())
             border = JBUI.Borders.empty(KiloSpacing.md)
@@ -244,7 +247,7 @@ class CollapsibleToolPanel(
         }
 
         val scrollPane = JScrollPane(textArea).apply {
-            border = JBUI.Borders.customLine(KiloTheme.borderWeak)
+            border = JBUI.Borders.customLine(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground())
             preferredSize = Dimension(Int.MAX_VALUE, minOf(textArea.preferredSize.height + 16, 300))
             maximumSize = Dimension(Int.MAX_VALUE, 300)
         }
