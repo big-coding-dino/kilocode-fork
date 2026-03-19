@@ -1,24 +1,29 @@
 package ai.kilo.plugin.ui.components
 
-import ai.kilo.plugin.model.*
+import ai.kilo.plugin.model.Session
+import ai.kilo.plugin.model.SessionStatus
+import ai.kilo.plugin.model.TokenUsage
+import ai.kilo.plugin.renderer.ChatUiRenderer
 import ai.kilo.plugin.services.KiloAppState
 import ai.kilo.plugin.store.ChatUiStateManager
-import ai.kilo.plugin.ui.KiloTheme
 import ai.kilo.plugin.ui.KiloSpacing
 import ai.kilo.plugin.ui.KiloTypography
 import ai.kilo.plugin.ui.components.chat.ChatDragDropHandler
-import ai.kilo.plugin.renderer.ChatUiRenderer
 import ai.kilo.plugin.ui.components.header.ChatHeaderPanel
 import ai.kilo.plugin.ui.components.input.PromptInputPanel
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.ui.AsyncProcessIcon
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.components.BorderLayoutPanel
 import kotlinx.coroutines.*
-import java.awt.*
+import java.awt.CardLayout
+import java.awt.Cursor
+import java.awt.FlowLayout
+import java.awt.Font
+import java.awt.GridBagLayout
 import javax.swing.*
 
 class ChatPanel(
@@ -52,7 +57,7 @@ class ChatPanel(
     init {
         border = JBUI.Borders.empty()
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
 
         // Header area
         val headerArea = HeaderArea(headerPanel, errorBanner)
@@ -63,7 +68,7 @@ class ChatPanel(
 
         // Empty state
         emptyStateLabel.horizontalAlignment = SwingConstants.CENTER
-        emptyStateLabel.foreground = KiloTheme.textWeak
+        emptyStateLabel.foreground = JBUI.CurrentTheme.Label.disabledForeground()
         emptyStateLabel.font = emptyStateLabel.font.deriveFont(KiloTypography.fontSizeMedium)
 
         val contentPanel = ContentPanel(
@@ -249,7 +254,7 @@ private class MessagesPanel : JBPanel<JBPanel<*>>() {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = JBUI.Borders.empty(KiloSpacing.lg, KiloSpacing.xl)
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
     }
 }
 
@@ -262,7 +267,7 @@ private class MessagesScrollPane(
         horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
         isOpaque = true
         viewport.isOpaque = true
-        viewport.background = KiloTheme.backgroundStronger
+        viewport.background = JBUI.CurrentTheme.ToolWindow.background()
     }
 }
 
@@ -271,7 +276,7 @@ private class EmptyStatePanel(
 ) : JPanel(GridBagLayout()) {
     init {
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
         add(label)
     }
 }
@@ -282,7 +287,7 @@ private class ContentPanel(
 ) : JPanel(CardLayout()) {
     init {
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
         add(emptyStatePanel, "empty")
         add(messagesScrollPane, "content")
     }
@@ -298,7 +303,7 @@ private class ContentPanel(
 
 private class FeedbackLabel : JBLabel("Share feedback ↗") {
     init {
-        foreground = KiloTheme.textWeak
+        foreground = JBUI.CurrentTheme.Label.disabledForeground()
         font = font.deriveFont(Font.PLAIN, 12f)
         horizontalAlignment = SwingConstants.CENTER
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
@@ -312,9 +317,9 @@ private class PromptArea(
 ) : BorderLayoutPanel() {
     init {
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
         border = BorderFactory.createCompoundBorder(
-            JBUI.Borders.customLine(KiloTheme.borderWeak, 1, 0, 0, 0),
+          JBUI.Borders.customLine(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground(), 1, 0, 0, 0),
             JBUI.Borders.empty(KiloSpacing.md, KiloSpacing.lg, KiloSpacing.sm, KiloSpacing.lg)
         )
         addToTop(attachedFilesPanel)
@@ -324,14 +329,21 @@ private class PromptArea(
 }
 
 private class TypingIndicator : JBPanel<JBPanel<*>>(FlowLayout(FlowLayout.LEFT, KiloSpacing.xs, 0)) {
+    private val spinner = AsyncProcessIcon("typing-indicator")
+
     init {
         isOpaque = true
-        background = KiloTheme.backgroundStronger
+        background = JBUI.CurrentTheme.ToolWindow.background()
         border = JBUI.Borders.empty(KiloSpacing.sm, KiloSpacing.xl)
 
-        val label = JBLabel("Generating response...", AllIcons.Process.Step_2, SwingConstants.LEFT).apply {
-            foreground = KiloTheme.textWeak
-        }
-        add(label)
+        add(spinner)
+        add(JBLabel("Generating response...").apply {
+            foreground = JBUI.CurrentTheme.Label.disabledForeground()
+        })
+    }
+
+    override fun setVisible(aFlag: Boolean) {
+        super.setVisible(aFlag)
+        if (aFlag) spinner.resume() else spinner.suspend()
     }
 }

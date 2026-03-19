@@ -1,7 +1,9 @@
 package ai.kilo.plugin.ui.components.chat.message.parts
 
+import ai.kilo.plugin.ui.KiloSpacing
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.util.ui.JBUI
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension
 import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension
@@ -168,7 +170,7 @@ class MarkdownPanel(
         // Language label
         if (language.isNotEmpty() && language != "code") {
             panel.add(JLabel(language).apply {
-                foreground = UIManager.getColor("Label.disabledForeground") ?: Color.GRAY
+                foreground = JBUI.CurrentTheme.Label.disabledForeground()
                 font = font.deriveFont(10f)
                 border = JBUI.Borders.empty(0, 0, 2, 0)
             }, BorderLayout.NORTH)
@@ -179,9 +181,10 @@ class MarkdownPanel(
             isEditable = false
             font = Font(Font.MONOSPACED, Font.PLAIN, 12)
             border = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                BorderFactory.createEmptyBorder(4, 4, 4, 4)
+                BorderFactory.createLineBorder(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground()),
+                JBUI.Borders.empty(KiloSpacing.md)
             )
+            background = EditorColorsManager.getInstance().globalScheme.defaultBackground
             tabSize = 4
         }
         panel.add(textArea, BorderLayout.CENTER)
@@ -194,20 +197,30 @@ class MarkdownPanel(
         val styleSheet = javax.swing.text.html.StyleSheet()
 
         val fontFamily = javax.swing.UIManager.getFont("Label.font")?.family ?: "Dialog"
+        val textColor = JBUI.CurrentTheme.Label.foreground().toHex()
+        val mutedColor = JBUI.CurrentTheme.Label.disabledForeground().toHex()
+        val linkColor = JBUI.CurrentTheme.Link.Foreground.ENABLED.toHex()
+        val editorBg = EditorColorsManager.getInstance().globalScheme.defaultBackground.toHex()
 
-        styleSheet.addRule("body { font-family: $fontFamily; font-size: 14pt; margin: 0; padding: 0; }")
+        styleSheet.addRule("body { font-family: $fontFamily; font-size: 14pt; margin: 0; padding: 0; color: $textColor; }")
         styleSheet.addRule("p { margin: 4px 0; }")
         styleSheet.addRule("h1 { font-size: 14pt; font-weight: bold; margin: 8px 0 4px 0; }")
         styleSheet.addRule("h2 { font-size: 13pt; font-weight: bold; margin: 6px 0 4px 0; }")
         styleSheet.addRule("h3 { font-size: 12pt; font-weight: bold; margin: 4px 0 2px 0; }")
         styleSheet.addRule("ul, ol { margin: 4px 0 4px 20px; }")
         styleSheet.addRule("li { margin: 2px 0; }")
-        styleSheet.addRule("code { font-family: monospace; }")
-        styleSheet.addRule("pre { font-family: monospace; }")
+        styleSheet.addRule("a { color: $linkColor; }")
+        styleSheet.addRule("code { font-family: monospace; color: $textColor; background-color: $editorBg; padding: 8px; }")
+        styleSheet.addRule("pre { font-family: monospace; color: $textColor; background-color: $editorBg; padding: 8px; }")
+        styleSheet.addRule("blockquote { color: $mutedColor; background-color: $editorBg; padding: 8px; }")
+        styleSheet.addRule("em { color: $textColor; }")
+
 
         kit.styleSheet = styleSheet
         return kit
     }
+
+    private fun java.awt.Color.toHex() = String.format("#%02x%02x%02x", red, green, blue)
 
     private sealed class ContentPart {
         data class Text(val text: String) : ContentPart()

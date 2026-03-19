@@ -35,6 +35,9 @@ sealed class SessionEntityType(val icon: Icon?) {
     }
 
     // Part-level entities (children of messages)
+    data class UserText(val callId: String?) : SessionEntityType(AllIcons.General.User) {
+        override val displayName: String get() = "[Part:UserText]"
+    }
     data class Text(val callId: String?) : SessionEntityType(AllIcons.FileTypes.Text) {
         override val displayName: String get() = "[Part:Text]"
     }
