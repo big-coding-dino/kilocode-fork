@@ -168,7 +168,7 @@ class MarkdownPanel(
         // Language label
         if (language.isNotEmpty() && language != "code") {
             panel.add(JLabel(language).apply {
-                foreground = UIManager.getColor("Label.disabledForeground") ?: Color.GRAY
+                foreground = JBUI.CurrentTheme.Label.disabledForeground()
                 font = font.deriveFont(10f)
                 border = JBUI.Borders.empty(0, 0, 2, 0)
             }, BorderLayout.NORTH)
@@ -179,7 +179,7 @@ class MarkdownPanel(
             isEditable = false
             font = Font(Font.MONOSPACED, Font.PLAIN, 12)
             border = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createLineBorder(JBUI.CurrentTheme.CustomFrameDecorations.separatorForeground()),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)
             )
             tabSize = 4
@@ -194,20 +194,28 @@ class MarkdownPanel(
         val styleSheet = javax.swing.text.html.StyleSheet()
 
         val fontFamily = javax.swing.UIManager.getFont("Label.font")?.family ?: "Dialog"
+        val textColor = JBUI.CurrentTheme.Label.foreground().toHex()
+        val mutedColor = JBUI.CurrentTheme.Label.disabledForeground().toHex()
+        val linkColor = JBUI.CurrentTheme.Link.Foreground.ENABLED.toHex()
 
-        styleSheet.addRule("body { font-family: $fontFamily; font-size: 14pt; margin: 0; padding: 0; }")
+        styleSheet.addRule("body { font-family: $fontFamily; font-size: 14pt; margin: 0; padding: 0; color: $textColor; }")
         styleSheet.addRule("p { margin: 4px 0; }")
         styleSheet.addRule("h1 { font-size: 14pt; font-weight: bold; margin: 8px 0 4px 0; }")
         styleSheet.addRule("h2 { font-size: 13pt; font-weight: bold; margin: 6px 0 4px 0; }")
         styleSheet.addRule("h3 { font-size: 12pt; font-weight: bold; margin: 4px 0 2px 0; }")
         styleSheet.addRule("ul, ol { margin: 4px 0 4px 20px; }")
         styleSheet.addRule("li { margin: 2px 0; }")
-        styleSheet.addRule("code { font-family: monospace; }")
-        styleSheet.addRule("pre { font-family: monospace; }")
+        styleSheet.addRule("a { color: $linkColor; }")
+        styleSheet.addRule("code { font-family: monospace; color: $textColor; }")
+        styleSheet.addRule("pre { font-family: monospace; color: $textColor; }")
+        styleSheet.addRule("blockquote { color: $mutedColor; }")
+        styleSheet.addRule("em { color: $textColor; }")
 
         kit.styleSheet = styleSheet
         return kit
     }
+
+    private fun java.awt.Color.toHex() = String.format("#%02x%02x%02x", red, green, blue)
 
     private sealed class ContentPart {
         data class Text(val text: String) : ContentPart()
